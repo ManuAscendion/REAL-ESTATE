@@ -2,16 +2,17 @@ import { google } from "googleapis";
 
 export default async function handler(req, res) {
 
-  const raw = process.env.GOOGLE_CREDENTIALS_JSON;
-const credentials = JSON.parse(raw.replace(/\\n/g, '\n'));
+  const raw = process.env.GOOGLE_CREDENTIALS_JSON
+    .replace(/\\n/g, '\n')
+    .replace(/\r/g, '');
+  const credentials = JSON.parse(raw);
 
-const auth = new google.auth.GoogleAuth({
+  const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-});
+  });
 
   const sheets = google.sheets({ version: "v4", auth });
-
   const range = req.query.range;
 
   const response = await sheets.spreadsheets.values.get({
@@ -20,7 +21,6 @@ const auth = new google.auth.GoogleAuth({
   });
 
   const rows = response.data.values;
-
   const table = {
     cols: rows[0].map(() => ({ label: "", type: "string" })),
     rows: rows.slice(1).map(r => ({
@@ -28,9 +28,7 @@ const auth = new google.auth.GoogleAuth({
     }))
   };
 
-  const gviz = `google.visualization.Query.setResponse(${JSON.stringify({
-    table
-  })});`;
+  const gviz = `google.visualization.Query.setResponse(${JSON.stringify({ table })});`;
 
   res.setHeader("Content-Type", "text/plain");
   res.status(200).send(gviz);
