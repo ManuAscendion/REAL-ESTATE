@@ -2,10 +2,12 @@ import { google } from "googleapis";
 
 export default async function handler(req, res) {
 
-  const auth = new google.auth.GoogleAuth({
-    keyFile: "./credentials.json",
+  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+
+const auth = new google.auth.GoogleAuth({
+    credentials,
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-  });
+});
 
   const sheets = google.sheets({ version: "v4", auth });
 
