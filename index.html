@@ -1,0 +1,2861 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Global Governance & Compliance Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+ <style>
+/* ================= UPDATED DARK THEME STYLES ================= */
+
+/* Color Palette Variables */
+:root {
+  --teal: #00FAC2;
+  --dark-teal: #008F66;
+  --purple: #6666CC;
+  --pink: #CC0066;
+  --emerald: #10B981;
+  --electric-blue: #3B82F6;
+  --amber: #F59E0B;
+  --crimson: #DC2626;
+  --yellow: #FFC804;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body { 
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #000000;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding-top: 70px;
+  position: relative;
+}
+
+
+.top-section {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(0, 250, 194, 0.3);
+  border-radius: 18px;
+  margin: 10px 24px 10px 24px;
+  padding: 18px 24px;
+  box-shadow: 0 8px 32px rgba(0, 250, 194, 0.15);
+  flex-shrink: 0;
+  backdrop-filter: blur(20px);
+}
+
+h1 { 
+  margin: 0 0 20px 0; 
+  color: var(--teal); 
+  font-size: 24px; 
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffffff 0%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+  margin-bottom: 0;
+}
+
+.metric-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 250, 194, 0.3);
+  border-radius: 14px;
+  padding: 16px 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.metric-box:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 250, 194, 0.3);
+  border-color: var(--teal);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.metric-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  filter: grayscale(0.3) brightness(1.2);
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 5px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-label.one-line {
+  white-space: nowrap;
+}
+
+
+/* Map and detail container styles */
+#map {
+  flex: 1;
+  height: auto !important;
+  margin: 0 24px 16px 24px;
+  border-radius: 20px;
+  border: 2px solid rgba(0, 250, 194, 0.3);
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 250, 194, 0.15);
+  min-height: 0;
+}
+
+.label {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--dark-teal) 100%);
+  color: #000000;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 15px;
+  white-space: nowrap;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(0, 250, 194, 0.4);
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.label.city-label {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 20px;
+}
+
+.back-btn {
+  position: fixed;
+  top: 90px;
+  left: 40px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--teal);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 4px 16px rgba(0, 250, 194, 0.3);
+  border: 2px solid var(--teal);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.back-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: var(--teal);
+  color: #ffffff;
+
+  box-shadow:
+    0 0 12px rgba(0, 250, 194, 0.6),
+    0 0 24px rgba(0, 250, 194, 0.3);
+
+  transform: translateX(-6px);
+}
+
+
+#detailView {
+  display: none;
+  margin: 0 24px 24px 24px;
+  border-radius: 20px;
+  border: 2px solid rgba(0, 250, 194, 0.3);
+  padding: 80px 40px 40px 40px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 250, 194, 0.15);
+  backdrop-filter: blur(20px);
+}
+
+h2 { 
+  margin-top: 0; 
+  margin-left: 0;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #07aa87;
+  font-family: 'Space Grotesk', sans-serif;
+  background: linear-gradient(135deg, #ffffff 0%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-transform: uppercase;
+  text-shadow: none;
+  filter: brightness(1.2) contrast(1.1);
+}
+h3 { 
+  margin-top: 35px; 
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(0, 250, 194, 0.4);
+  font-family: 'Space Grotesk', sans-serif;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(0, 250, 194, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  filter: brightness(1.2) contrast(1.1);
+}
+
+/* Make emojis more visible */
+h2, h3, .card, .office-title {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Emoji visibility enhancement */
+* {
+  text-rendering: optimizeLegibility;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 24px;
+}
+.card {
+  border: 1px solid rgba(0, 250, 194, 0.3);
+  border-radius: 14px;
+  padding: 20px 22px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 250, 194, 0.25);
+  border-color: var(--teal);
+  background: rgba(255, 255, 255, 0.06);
+}
+.card b {
+  display: block;
+  margin-top: 10px;
+  font-size: 22px;
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  font-family: 'Space Grotesk', sans-serif;
+  word-break: break-word;        /* ADD THIS */
+  overflow-wrap: break-word;     /* ADD THIS */
+  line-height: 1.3;              /* ADD THIS */
+}
+
+/* ========== COMPLIANCE STYLES (DARK THEME) ========== */
+.compliance-section {
+  margin-top: 30px;
+  border-top: 2px solid rgba(0, 250, 194, 0.3);
+  padding-top: 24px;
+}
+
+.compliance-section h3 {
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  border-bottom: none;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(102, 102, 204, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 2px solid rgba(102, 102, 204, 0.4);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(102, 102, 204, 0.2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  width: auto;
+  white-space: nowrap;
+}
+
+.compliance-section h3:hover {
+  background: linear-gradient(135deg, rgba(102, 102, 204, 0.25) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border-color: var(--purple);
+  box-shadow: 0 12px 32px rgba(102, 102, 204, 0.3);
+  transform: translateY(-2px);
+}
+
+.compliance-section h3::first-letter {
+  font-size: 36px;
+  margin-right: 8px;
+  filter: brightness(1.4) contrast(1.2);
+}
+
+.compliance-sites-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.compliance-site-card {
+  background: linear-gradient(135deg, rgba(20, 20, 30, 0.8) 0%, rgba(10, 10, 20, 0.9) 100%);
+  border: 2px solid rgba(0, 250, 194, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 700px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+.compliance-site-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0, 250, 194, 0.25);
+  border-color: var(--teal);
+  background: linear-gradient(135deg, rgba(25, 25, 35, 0.85) 0%, rgba(15, 15, 25, 0.95) 100%);
+}
+
+.compliance-site-card h4 {
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  letter-spacing: 0.5px;
+  font-family: 'Space Grotesk', sans-serif;
+  padding-bottom: 14px;
+  border-bottom: 2px solid rgba(0, 250, 194, 0.2);
+}
+.compliance-score {
+  background: linear-gradient(135deg, var(--purple) 0%, #5B5BD6 100%);
+  color: #ffffff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px rgba(105, 102, 204, 0.4);
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.compliance-chart-container {
+  height: 260px;
+  position: relative;
+  margin-top: 12px;
+  padding: 20px 20px 20px 40px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+}
+
+.drawer {
+  position: fixed;
+  top: 70px;
+  right: -680px;
+  width: 620px;
+  height: calc(100vh - 70px);
+  background: rgba(10, 10, 10, 0.98);
+  border-left: 3px solid var(--teal);
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+  transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+}
+
+.drawer.open {
+  right: 0;
+}
+
+.drawer-header {
+  padding: 24px 28px;
+  border-bottom: 3px solid var(--teal);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.95);
+  flex-shrink: 0;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+  border: none;
+  padding: 0;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffffff 0%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.close-btn {
+  background: linear-gradient(135deg, var(--pink) 0%, #9a0056 100%);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(195, 0, 110, 0.4);
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: linear-gradient(135deg, #9a0056 0%, var(--pink) 100%);
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(195, 0, 110, 0.6);
+}
+
+.section {
+  margin-bottom: 40px;
+}
+
+.section h3 {
+  font-size: 19px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 14px;
+}
+
+.section h3::before {
+  font-size: 24px;
+  font-weight: 900;
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.section.done h3 { 
+  color: var(--emerald); 
+  border-bottom-color: var(--emerald);
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.section.done h3::before {
+  content: "✓";
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--emerald);
+  border: 2px solid var(--emerald);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.section.progress h3 { 
+  color: var(--amber); 
+  border-bottom-color: var(--amber);
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.section.progress h3::before {
+  content: "◐";
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--amber);
+  border: 2px solid var(--amber);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.section.pending h3 { 
+  color: var(--pink); 
+  border-bottom-color: var(--pink);
+  text-shadow: 0 0 20px rgba(204, 0, 102, 0.3);
+}
+
+.section.pending h3::before {
+  content: "✕";
+  background: rgba(204, 0, 102, 0.2);
+  color: var(--pink);
+  border: 2px solid var(--pink);
+  box-shadow: 0 4px 12px rgba(204, 0, 102, 0.3);
+}
+
+.item {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  border-left: 5px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(8px);
+  box-shadow: 0 6px 20px rgba(0, 250, 194, 0.25);
+}
+
+.section.done .item { 
+  border-left-color: var(--emerald);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.section.done .item:hover {
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.section.progress .item { 
+  border-left-color: var(--amber);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.section.progress .item:hover {
+  background: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}
+
+.section.pending .item { 
+  border-left-color: var(--pink);
+  background: rgba(204, 0, 102, 0.08);
+}
+
+.section.pending .item:hover {
+  background: rgba(204, 0, 102, 0.15);
+  box-shadow: 0 6px 20px rgba(204, 0, 102, 0.3);
+}
+
+.item strong {
+  display: block;
+  color: #ffffff;
+  margin-bottom: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+.item small {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 7px 18px;
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  border: 2px solid;
+}
+
+.badge-facility { 
+  background: rgba(0, 250, 194, 0.15); 
+  color: var(--teal);
+  border-color: var(--teal);
+  box-shadow: 0 3px 10px rgba(0, 250, 194, 0.3);
+}
+
+.badge-fire { 
+  background: rgba(204, 0, 102, 0.15); 
+  color: #FF4081;
+  border-color: #FF4081;
+  box-shadow: 0 3px 10px rgba(204, 0, 102, 0.3);
+}
+
+.badge-statutory { 
+  background: rgba(0, 143, 102, 0.15); 
+  color: #00FAC2;
+  border-color: #00FAC2;
+  box-shadow: 0 3px 10px rgba(0, 143, 102, 0.3);
+}
+
+.badge-vendor { 
+  background: rgba(255, 200, 4, 0.15); 
+  color: #FFD700;
+  border-color: #FFD700;
+  box-shadow: 0 3px 10px rgba(255, 200, 4, 0.3);
+}
+
+.badge-environment { 
+  background: rgba(102, 102, 204, 0.15); 
+  color: #9B9BFF;
+  border-color: #9B9BFF;
+  box-shadow: 0 3px 10px rgba(102, 102, 204, 0.3);
+}
+
+.badge-security { 
+  background: rgba(59, 130, 246, 0.15); 
+  color: #60A5FA;
+  border-color: #60A5FA;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+}
+
+/* Hide all Leaflet controls */
+.leaflet-control-attribution,
+.leaflet-control-zoom,
+.leaflet-control,
+.leaflet-bottom,
+.leaflet-right,
+.leaflet-top {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+#map .leaflet-control-container .leaflet-bottom.leaflet-right {
+  display: none !important;
+}
+
+/* ======== FULL HEIGHT LAYOUT ======== */
+.page-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-main-inner {
+  flex: 1;
+  position: relative;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-main-inner #map {
+  margin: 12px 16px 12px 16px;
+}
+
+.leaflet-container {
+  height: 100% !important;
+  background: #0a0a0a !important;
+}
+
+/* ========== TOP NAVIGATION BAR ========== */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(0, 0, 0, 0.95);
+  border-bottom: 2px solid rgba(0, 250, 194, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px;
+  z-index: 2000;
+  box-shadow: 0 4px 24px rgba(0, 250, 194, 0.15);
+  backdrop-filter: blur(30px);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-container img {
+  height: 78px;
+  width: auto;
+  filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 250, 194, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.logo-container img:hover {
+  transform: scale(1.05);
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--teal);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.nav-btn {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--dark-teal) 100%);
+  color: #000000;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 250, 194, 0.4);
+  letter-spacing: 0.5px;
+}
+
+.nav-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 250, 194, 0.5);
+}
+
+.nav-btn:active {
+  transform: translateY(0);
+}
+
+.back-btn-nav {
+  background: linear-gradient(135deg, var(--pink) 0%, #9a0056 100%);
+  color: #ffffff;
+}
+
+.back-btn-nav:hover {
+  box-shadow: 0 6px 24px rgba(195, 0, 110, 0.5);
+}
+
+.back-btn-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.office-block {
+  margin-top: 50px;
+  padding-top: 40px;
+  border-top: 3px dashed rgba(0, 250, 194, 0.3);
+}
+.office-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+  font-family: 'Space Grotesk', sans-serif;
+  background: linear-gradient(135deg, rgba(0, 250, 194, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%);
+  border: 2px solid rgba(0, 250, 194, 0.4);
+  border-radius: 14px;
+  padding: 16px 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 250, 194, 0.2);
+  transition: all 0.3s ease;
+}
+
+.office-title:hover {
+  background: linear-gradient(135deg, rgba(0, 250, 194, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%);
+  border-color: var(--teal);
+  box-shadow: 0 12px 32px rgba(0, 250, 194, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Make emoji in office title larger and more visible */
+.office-title::first-letter {
+  font-size: 40px;
+  margin-right: 8px;
+  filter: brightness(1.4) contrast(1.2);
+}
+
+.nav-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: 'Space Grotesk', sans-serif;
+  background: linear-gradient(135deg, #ffffff 0%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.clickable-label {
+  transition: all 0.3s ease;
+  font-size: 14px !important;
+}
+
+.clickable-label.force-hover {
+  background: linear-gradient(135deg, #00FAC2 0%, #008F66 100%) !important;
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(0, 250, 194, 0.5) !important;
+  z-index: 1000 !important;
+  border-color: #ffffff !important;
+}
+
+/* Scrollbar Styling */
+#detailView::-webkit-scrollbar,
+.drawer-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+#detailView::-webkit-scrollbar-track,
+.drawer-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+#detailView::-webkit-scrollbar-thumb,
+.drawer-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--dark-teal) 100%);
+  border-radius: 10px;
+}
+
+#detailView::-webkit-scrollbar-thumb:hover,
+.drawer-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--dark-teal) 0%, var(--teal) 100%);
+}
+
+/* Chart.js label styling improvements */
+.compliance-chart-container canvas {
+  filter: brightness(1.1) contrast(1.1);
+}
+
+/* Ensure chart text is visible */
+.chartjs-render-monitor {
+  color: #ffffff !important;
+}
+
+.compliance-section h3 {
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  border-bottom: none;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, rgba(102, 102, 204, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 2px solid rgba(102, 102, 204, 0.4);
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(102, 102, 204, 0.2);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  width: auto;
+  white-space: nowrap;
+}
+
+/* ================= LIGHT MODE ================= */
+body.light-mode {
+  background: #eef2f7;
+  color: #1a202c;
+}
+
+body.light-mode .top-nav {
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom: 2px solid rgba(0, 143, 102, 0.35);
+  box-shadow: 0 4px 24px rgba(0, 143, 102, 0.1);
+}
+
+body.light-mode .nav-title {
+  background: linear-gradient(135deg, #1a202c 0%, #008F66 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.light-mode .nav-btn {
+  background: linear-gradient(135deg, #008F66 0%, #006644 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 143, 102, 0.35);
+}
+
+body.light-mode .nav-btn:hover {
+  box-shadow: 0 6px 20px rgba(0, 143, 102, 0.5);
+}
+
+body.light-mode .top-section {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(0, 143, 102, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.07);
+}
+
+body.light-mode .metric-box {
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 143, 102, 0.25);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .metric-box:hover {
+  background: rgba(0, 250, 194, 0.06);
+  border-color: #008F66;
+  box-shadow: 0 8px 28px rgba(0, 143, 102, 0.18);
+}
+
+body.light-mode .metric-value {
+  color: #111827;
+}
+
+body.light-mode .metric-label {
+  color: #6b7280;
+}
+
+body.light-mode #map {
+  border: 2px solid rgba(0, 143, 102, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .leaflet-container {
+  background: #dde8f0 !important;
+}
+
+body.light-mode #detailView {
+  background: rgba(255, 255, 255, 0.97);
+  border: 2px solid rgba(0, 143, 102, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.07);
+  color: #1a202c;
+}
+
+body.light-mode h2 {
+  background: linear-gradient(135deg, #111827 0%, #008F66 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-bottom: 3px solid #008F66;
+  filter: none;
+}
+
+body.light-mode h3 {
+  background: linear-gradient(135deg, #111827 0%, #007a55 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-bottom: 2px solid rgba(0, 143, 102, 0.35);
+  filter: none;
+}
+
+body.light-mode .card {
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 143, 102, 0.2);
+  color: #374151;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .card:hover {
+  background: rgba(0, 250, 194, 0.05);
+  border-color: #008F66;
+  box-shadow: 0 10px 28px rgba(0, 143, 102, 0.15);
+}
+
+body.light-mode .card b {
+  color: #111827;
+}
+
+body.light-mode .office-block {
+  border-top-color: rgba(0, 143, 102, 0.3) !important;
+}
+
+body.light-mode .office-title {
+  background: linear-gradient(135deg, rgba(0, 250, 194, 0.1) 0%, rgba(16, 185, 129, 0.07) 100%);
+  border: 2px solid rgba(0, 143, 102, 0.35);
+  color: #111827;
+  box-shadow: 0 4px 16px rgba(0, 143, 102, 0.1);
+}
+
+/* ---- Compliance Section ---- */
+body.light-mode .compliance-section {
+  border-top: 2px solid rgba(0, 143, 102, 0.25);
+}
+
+body.light-mode .compliance-section h3 {
+  -webkit-text-fill-color: #111827 !important;
+  color: #111827 !important;
+  background: linear-gradient(135deg, rgba(0, 250, 194, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%) !important;
+  border: 2px solid rgba(0, 143, 102, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(0, 143, 102, 0.1) !important;
+}
+
+body.light-mode .compliance-sites-container {
+  gap: 24px;
+}
+
+body.light-mode .compliance-site-card {
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 143, 102, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+body.light-mode .compliance-site-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 143, 102, 0.15);
+  border-color: #008F66;
+}
+
+body.light-mode .compliance-site-card h4 {
+  color: #111827;
+  border-bottom: 2px solid rgba(0, 143, 102, 0.2);
+}
+
+body.light-mode .compliance-chart-container {
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Drawer ---- */
+body.light-mode .drawer {
+  background: #f8fafc;
+  border-left: 3px solid #008F66;
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.14);
+}
+
+body.light-mode .drawer-header {
+  background: #ffffff;
+  border-bottom: 3px solid #008F66;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .drawer-header h2 {
+  background: linear-gradient(135deg, #111827 0%, #008F66 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 20px;
+}
+
+body.light-mode .close-btn {
+  background: linear-gradient(135deg, #CC0066 0%, #9a0050 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(204, 0, 102, 0.35);
+}
+
+/* ---- Section headers inside drawer ---- */
+body.light-mode .section h3 {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  background-clip: unset !important;
+  border-bottom-width: 2px;
+  filter: none;
+  font-size: 16px;
+  letter-spacing: 1.2px;
+}
+
+body.light-mode .section.done h3 {
+  color: #059669 !important;
+  -webkit-text-fill-color: #059669 !important;
+  border-bottom-color: #059669;
+  text-shadow: none;
+}
+
+body.light-mode .section.done h3::before {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+  border-color: #059669;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
+}
+
+body.light-mode .section.progress h3 {
+  color: #d97706 !important;
+  -webkit-text-fill-color: #d97706 !important;
+  border-bottom-color: #d97706;
+  text-shadow: none;
+}
+
+body.light-mode .section.progress h3::before {
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+  border-color: #d97706;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
+}
+
+body.light-mode .section.pending h3 {
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  border-bottom-color: #dc2626;
+  text-shadow: none;
+}
+
+body.light-mode .section.pending h3::before {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+  border-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+/* ---- Items ---- */
+body.light-mode .item {
+  background: #ffffff;
+  border-left-width: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .item:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  transform: translateX(6px);
+}
+
+body.light-mode .item strong {
+  color: #111827;
+  font-size: 15px;
+}
+
+body.light-mode .item small {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+body.light-mode .section.done .item {
+  background: #f0fdf8;
+  border-left-color: #059669;
+}
+
+body.light-mode .section.done .item:hover {
+  background: #dcfdf0;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.15);
+}
+
+body.light-mode .section.progress .item {
+  background: #fffbeb;
+  border-left-color: #d97706;
+}
+
+body.light-mode .section.progress .item:hover {
+  background: #fef3c7;
+  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.15);
+}
+
+body.light-mode .section.pending .item {
+  background: #fff5f5;
+  border-left-color: #dc2626;
+}
+
+body.light-mode .section.pending .item:hover {
+  background: #fee2e2;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.15);
+}
+
+/* ---- "No items" placeholder text ---- */
+body.light-mode .drawer-body p {
+  color: #9ca3af !important;
+}
+
+/* ---- Badges ---- */
+body.light-mode .category-badge {
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .badge-facility {
+  background: rgba(0, 143, 102, 0.1);
+  color: #007a55;
+  border-color: #008F66;
+  box-shadow: 0 2px 8px rgba(0, 143, 102, 0.2);
+}
+
+body.light-mode .badge-fire {
+  background: rgba(220, 38, 38, 0.08);
+  color: #c2185b;
+  border-color: #e91e8c;
+  box-shadow: 0 2px 8px rgba(233, 30, 140, 0.2);
+}
+
+body.light-mode .badge-statutory {
+  background: rgba(0, 143, 102, 0.08);
+  color: #006644;
+  border-color: #00875a;
+  box-shadow: 0 2px 8px rgba(0, 135, 90, 0.18);
+}
+
+body.light-mode .badge-vendor {
+  background: rgba(180, 120, 0, 0.1);
+  color: #92600a;
+  border-color: #b45309;
+  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.2);
+}
+
+body.light-mode .badge-environment {
+  background: rgba(79, 70, 229, 0.08);
+  color: #4338ca;
+  border-color: #6366f1;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.18);
+}
+
+body.light-mode .badge-security {
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.18);
+}
+
+/* ---- Back Button ---- */
+body.light-mode .back-btn {
+  background: #ffffff;
+  color: #008F66;
+  border: 2px solid #008F66;
+  box-shadow: 0 4px 14px rgba(0, 143, 102, 0.15);
+}
+
+body.light-mode .back-btn:hover {
+  background: #f0fdf9;
+  box-shadow: 0 0 14px rgba(0, 143, 102, 0.4), 0 0 28px rgba(0, 143, 102, 0.2);
+}
+
+/* ---- Logo ---- */
+body.light-mode .logo-container img {
+  filter: brightness(0) saturate(100%) invert(29%) sepia(85%) saturate(500%) hue-rotate(130deg);
+}
+
+/* ---- Scrollbar ---- */
+body.light-mode #detailView::-webkit-scrollbar-track,
+body.light-mode .drawer-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode #detailView::-webkit-scrollbar-thumb,
+body.light-mode .drawer-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #008F66, #00FAC2);
+}
+
+/* ---- Toggle Button ---- */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(0, 250, 194, 0.5);
+  border-radius: 50px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 250, 194, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(0, 250, 194, 0.12);
+  border-color: var(--teal);
+  box-shadow: 0 6px 22px rgba(0, 250, 194, 0.35);
+  transform: translateY(-2px);
+}
+
+.theme-toggle-btn:active {
+  transform: translateY(0px);
+}
+
+.toggle-track {
+  width: 40px;
+  height: 22px;
+  background: rgba(0, 250, 194, 0.25);
+  border-radius: 50px;
+  border: 2px solid rgba(0, 250, 194, 0.5);
+  position: relative;
+  transition: background 0.35s ease, border-color 0.35s ease;
+  flex-shrink: 0;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--teal);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.35s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+body.light-mode .theme-toggle-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 143, 102, 0.5);
+  color: #008F66;
+  box-shadow: 0 4px 14px rgba(0, 143, 102, 0.12);
+}
+
+body.light-mode .theme-toggle-btn:hover {
+  background: rgba(0, 143, 102, 0.08);
+  border-color: #008F66;
+  box-shadow: 0 6px 22px rgba(0, 143, 102, 0.25);
+}
+
+body.light-mode .toggle-track {
+  background: rgba(0, 143, 102, 0.15);
+  border-color: rgba(0, 143, 102, 0.4);
+}
+
+body.light-mode .toggle-thumb {
+  background: #008F66;
+}
+
+.theme-toggle-btn.is-light .toggle-thumb {
+  transform: translateX(18px);
+}
+
+.theme-toggle-btn.is-light .toggle-track {
+  background: rgba(0, 143, 102, 0.25);
+  border-color: #008F66;
+}
+
+/* ========== LEASE ALERT STYLES ========== */
+.alert-bell-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(220, 38, 38, 0.6);
+  border-radius: 50px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff6b6b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.alert-bell-btn:hover {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: #ff4444;
+  box-shadow: 0 6px 22px rgba(220, 38, 38, 0.4);
+  transform: translateY(-2px);
+}
+
+.alert-badge {
+  position: absolute;
+
+  top: -6px;
+  right: -6px;
+
+  background: linear-gradient(135deg,#ff3b3b,#dc2626);
+
+  color: white;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #000;
+
+  box-shadow:
+    0 0 10px rgba(220,38,38,0.8);
+
+  animation: alertPulse 1.8s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,0.6); }
+  50% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+}
+
+.lease-alert-panel {
+  position: fixed;
+  top: 70px;
+  left: -520px;
+  width: 480px;
+  height: calc(100vh - 70px);
+  background: rgba(10, 10, 10, 0.98);
+  border-right: 3px solid #dc2626;
+  box-shadow: 12px 0 48px rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  z-index: 1500;
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+}
+
+.lease-alert-panel.open { left: 0; }
+
+.lease-alert-header {
+  padding: 24px 28px;
+  border-bottom: 3px solid #dc2626;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.95);
+  flex-shrink: 0;
+}
+
+.lease-alert-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  border: none;
+  padding: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #ff6b6b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  filter: none;
+}
+
+.lease-alert-close {
+  background: rgba(220,38,38,0.2);
+  color: #ff6b6b;
+  border: 2px solid rgba(220,38,38,0.5);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.lease-alert-close:hover {
+  background: rgba(220,38,38,0.35);
+  border-color: #dc2626;
+}
+
+.lease-alert-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.lease-alert-body::-webkit-scrollbar { width: 6px; }
+.lease-alert-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+.lease-alert-body::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
+
+.alert-tier-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 20px 0 10px 0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.alert-tier-label.critical {
+  background: rgba(220,38,38,0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(220,38,38,0.4);
+}
+
+.alert-tier-label.warning {
+  background: rgba(245,158,11,0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245,158,11,0.4);
+}
+
+.alert-card {
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  border-left: 5px solid;
+  transition: all 0.3s ease;
+}
+
+.alert-card.critical {
+  background: rgba(220,38,38,0.08);
+  border-left-color: #dc2626;
+  border: 1px solid rgba(220,38,38,0.25);
+  border-left: 5px solid #dc2626;
+}
+
+.alert-card.warning {
+  background: rgba(245,158,11,0.08);
+  border-left-color: #f59e0b;
+  border: 1px solid rgba(245,158,11,0.25);
+  border-left: 5px solid #f59e0b;
+}
+
+.alert-card:hover { transform: translateX(6px); }
+
+.alert-card-city {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 4px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.alert-card-office {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.alert-card-rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.alert-card-row {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  font-weight: 600;
+}
+
+.alert-card-row span {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.alert-days-chip {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 10px;
+  letter-spacing: 0.5px;
+}
+
+.alert-days-chip.critical { background: rgba(220,38,38,0.2); color: #ff6b6b; border: 1px solid #dc2626; }
+.alert-days-chip.overdue { background: rgba(220,38,38,0.35); color: #ff4444; border: 1px solid #dc2626; }
+.alert-days-chip.warning { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+
+.no-alerts {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(255,255,255,0.4);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Light mode for alert panel */
+body.light-mode .lease-alert-panel {
+  background: #f8fafc;
+  border-right: 3px solid #dc2626;
+}
+
+body.light-mode .lease-alert-header {
+  background: #ffffff;
+  border-bottom: 3px solid #dc2626;
+}
+
+body.light-mode .lease-alert-header h2 {
+  background: linear-gradient(135deg, #111827 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.light-mode .alert-card.critical { background: #fff5f5; }
+body.light-mode .alert-card.warning { background: #fffbeb; }
+body.light-mode .alert-card-city { color: #111827; }
+body.light-mode .alert-card-row { color: #6b7280; }
+body.light-mode .alert-card-row span { color: #111827; }
+body.light-mode .alert-bell-btn { color: #dc2626; background: rgba(220,38,38,0.06); }
+
+/* Compact bell button between logo and title */
+.alert-bell-btn {
+  position: relative;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 50%;
+  border: 2px solid rgba(0,250,194,0.5);
+
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 20px;
+  cursor: pointer;
+
+  transition: all 0.35s ease;
+
+  box-shadow:
+    0 0 10px rgba(0,250,194,0.2),
+    inset 0 0 8px rgba(0,250,194,0.1);
+}
+
+.alert-bell-btn:hover {
+  transform: scale(1.08);
+
+  border-color: #00FAC2;
+
+  box-shadow:
+    0 0 12px rgba(0,250,194,0.6),
+    0 0 30px rgba(0,250,194,0.4);
+}
+
+</style>
+</head>
+
+<body>
+
+
+<div class="top-nav">
+  <!-- LEFT — logo + bell grouped together -->
+  <div style="display:flex; align-items:center; gap:14px;">
+    <div class="logo-container">
+      <img src="ascendion-logo.png" alt="Company Logo">
+    </div>
+    <button class="alert-bell-btn" id="leaseAlertBtn" onclick="openLeaseAlertPanel()" style="display:none;">
+      🔔 <span class="alert-badge" id="alertBadge">0</span>
+    </button>
+  </div>
+
+  <!-- CENTER -->
+  <div class="nav-title">
+    Corporate Real Estate Intelligence Hub
+  </div>
+
+  <!-- RIGHT -->
+  <div class="nav-actions">
+     
+  <button
+    class="theme-toggle-btn"
+    id="themeToggleBtn"
+    onclick="toggleTheme()"
+    title="Toggle Light / Dark Mode"
+  >
+    <div class="toggle-track">
+      <div class="toggle-thumb"></div>
+    </div>
+    <span id="themeLabel">🌙 Dark</span>
+  </button>
+  <button class="nav-btn" id="homeBtn" onclick="handleHomeClick()">🏠 Home</button>
+</div>
+</div>
+
+
+<div class="top-section" id="topSection">
+  
+<div class="metrics-grid">
+    <div class="metric-box">
+      <div class="metric-icon">🌍</div>
+      <div class="metric-value" id="totalCountries">--</div>
+      <div class="metric-label">Countries</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-icon">📍</div>
+      <div class="metric-value" id="totalSites">--</div>
+      <div class="metric-label">Sites</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-icon">🏢</div>
+      <div class="metric-value" id="totalRealEstate">--</div>
+      <div class="metric-label one-line">Real Estate (Sq Feet)</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-icon">👥</div>
+      <div class="metric-value" id="totalPeople">--</div>
+      <div class="metric-label">Employees</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-icon">💵</div>
+      <div class="metric-value" id="totalOpex">--</div>
+      <div class="metric-label">OpEx</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-icon">💎</div>
+      <div class="metric-value" id="assetValue">--</div>
+      <div class="metric-label">Asset Value</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-icon">📋</div>
+      <div class="metric-value" id="compliance">--</div>
+      <div class="metric-label">Compliance</div>
+    </div>
+  </div>
+</div>
+
+<div class="page-main">
+  <div class="page-main-inner">
+    <div class="back-btn" id="backBtn">← Back</div>
+    <div id="map"></div>
+
+
+    
+    <div id="detailView">
+      
+      <h2 id="detailTitle"></h2>
+
+      <div id="coreGrid"></div>
+      <div id="efficiencyGrid"></div>
+      <div id="financialGrid"></div>
+
+      <!-- ========== COMPLIANCE SECTION (ADDITIVE) ========== -->
+      <div class="compliance-section">
+        <h3>📊 Compliance Overview</h3>
+        <div class="compliance-sites-container" id="complianceSitesContainer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== COMPLIANCE DRAWER (ADDITIVE) ========== -->
+<div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<div class="drawer" id="drawer">
+
+  <!-- HEADER (FIXED) -->
+  <div class="drawer-header">
+    <h2 id="drawerTitle"></h2>
+    <button class="close-btn" onclick="closeDrawer()">✕ Close</button>
+  </div>
+
+  <!-- BODY (SCROLLABLE) -->
+  <div class="drawer-body">
+
+    <div class="section done">
+  <h3>Completed</h3>
+  <div id="done"></div>
+</div>
+
+<div class="section progress">
+  <h3>In Progress</h3>
+  <div id="progress"></div>
+</div>
+
+<div class="section pending">
+  <h3>Pending</h3>
+  <div id="notdone"></div>
+</div>
+
+  </div>
+
+</div>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* ================= GOOGLE SHEETS CONFIG ================= */
+const SHEET_ID = "1bRESXFZIv4J3ySaS1N2Ez6P6c1_3HZFgC2daXi1-BgU";
+const SHEET_NAME = "UPDATED";
+
+/* ================= MAP INIT ================= */
+let map = L.map("map").setView([20, 0], 2);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+// After flex layout settles, fix map size
+setTimeout(() => {
+  map.invalidateSize();
+}, 0);
+
+const backBtn = document.getElementById("backBtn");
+const detailView = document.getElementById("detailView");
+const detailTitle = document.getElementById("detailTitle");
+
+/* ================= STATE ================= */
+let currentView = "world";
+let currentCountry = null;
+
+/* ================= STATIC MAP DATA ================= */
+const countries = {
+  "United States": { lat:37, lng:-95, zoom:4, direction: "top", offset: [0, -15] },
+  "Mexico": { lat:23, lng:-102, zoom:5, direction: "bottom", offset: [0, 10] },
+  "Ireland": { lat:53, lng:-8, zoom:6, direction: "left", offset: [-11, 18] },
+"England": { lat:54, lng:-2, zoom:6, direction: "top", offset: [0, 5] },
+"Poland": { lat:52, lng:20, zoom:6, direction: "right", offset: [30, -10] },
+"Romania": { lat:45.9, lng:25, zoom:6, direction: "right", offset: [30, 10] },
+  "Netherlands": { lat:52.3, lng:5.3, zoom:7, direction: "bottom", offset: [0, 25] },
+  "India": { lat:21, lng:78, zoom:5, direction: "right", offset: [0, -15] },
+  "Philippines": { lat:14, lng:122, zoom:6, direction: "right", offset: [15, 0] },
+  "Singapore": { lat:0.5, lng:105, zoom:7, direction: "bottom", offset: [15, 0] },
+};
+const cities = {
+  "India": [
+    ["Vadodara",22.31,73.18,"top",[0,-15]],
+    ["Bangalore",12.97,77.59,"left",[-15,0]],  // Changed to left
+    ["Hyderabad",17.38,78.48,"top",[0,-15]],
+    ["Chennai",12.70,80.27,"right",[15,0]],    // Changed to right
+    ["Pune",18.52,73.85,"left",[-15,0]]
+  ],
+  "United States": [
+    ["Atlanta",33.75,-84.39,"bottom",[0,18]],
+    ["Austin",30.27,-97.74,"bottom",[0,18]],
+    ["Basking Ridge",40.71,-74.55,"top",[0,-18]],
+    ["Charlotte",35.22,-80.84,"left",[-20,0]],
+    ["Chicago",41.88,-87.63,"left",[0,18]],
+    ["Dallas",32.78,-96.8,"left",[-18,0]],
+    ["Folsom",38.68,-121.18,"top",[0,-18]],
+    ["Glen Allen",37.66,-77.5,"right",[20,0]],
+    ["Irvine",33.68,-117.83,"right",[18,0]],
+    ["Jersey City",40.72,-74.07,"left",[-20,0]],
+    ["Minneapolis",44.97,-93.26,"top",[0,-18]],
+    ["Pleasanton",37.66,-121.87,"right",[20,0]],
+    ["Raleigh",35.78,-78.64,"bottom",[20,0]],
+    ["Redmond",47.67,-122.12,"left",[-18,0]],
+    ["San Diego",32.71,-117.16,"bottom",[0,18]],
+    ["San Francisco",37.77,-122.42,"left",[-20,-5]],
+    ["San Jose",37.33,-121.89,"bottom",[0,18]],
+    ["Tampa",27.95,-82.46,"right",[18,0]]
+
+  ],
+  "Mexico": [
+    ["Monterrey",25.68,-100.31]
+  ],
+  "Ireland": [
+    ["Dublin", 53.33, -6.25, "bottom", [0, 12]]
+],
+"England": [
+    ["London", 51.51, -0.13, "bottom", [0, 12]]
+],
+"Romania": [
+    ["Bucharest", 44.43, 26.10, "bottom", [0, 12]]
+],
+"Netherlands": [
+    ["Amsterdam", 52.37, 4.90, "bottom", [0, 12]]
+],
+  "Philippines": [
+    ["Makati",14.6,120.98],
+    ["Cebu",10.31,123.89],
+  ],
+  "Poland": [
+    ["Warszawa", 52.23, 21.01, "top", [0, -12]],
+    ["Krakow", 50.06, 19.94, "bottom", [0, 12]]
+  ],
+  "Singapore": [
+    ["Singapore", 1.35, 103.82, "bottom", [0, 12]]
+  ]
+};
+
+/* ================= GOOGLE SHEETS LOAD ================= */
+/* ================= GOOGLE SHEETS LOAD ================= */
+const cityData = {};
+const NA = v => (v === null || v === undefined || v === "" ? "NA" : v);
+
+
+function formatUSD(value) {
+  if (value === null || value === undefined || value === "" || value === "NA") {
+    return "NA";
+  }
+
+  const num = Number(String(value).replace(/,/g, ""));
+  if (isNaN(num)) return value;
+
+  return "$" + num.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+
+fetch(`/api/sheets?range=${SHEET_NAME}`)
+  .then(r => r.text())
+  .then(t => {
+    const json = JSON.parse(
+  t.substring(
+    t.indexOf("(") + 1,
+    t.lastIndexOf(")")
+  )
+);
+
+    json.table.rows.forEach(r => {
+  const city = r.c[0]?.v;
+  
+  // Always check N column for max employee value (even rows without a city)
+  const empVal = cleanNumber(r.c[13]?.v);
+  if (empVal > (window._maxEmployees || 0)) {
+    window._maxEmployees = empVal;
+  }
+
+  if (!city) return;
+
+      // ✅ MULTI OFFICE SUPPORT
+      if (!cityData[city]) {
+        cityData[city] = [];
+      }
+
+    cityData[city].push({
+  location: r.c[0]?.v,          // A
+  country: r.c[1]?.v,           // B
+  state: r.c[2]?.v,             // C
+
+  officeType: r.c[3]?.v,        // D
+  buType: r.c[4]?.v,            // E
+  officeName: r.c[5]?.v,        // F
+
+  address: r.c[6]?.v,           // G
+
+  leaseStart: r.c[7]?.f || r.c[7]?.v,   // H
+  leaseEnd: r.c[8]?.f || r.c[8]?.v,     // I
+  lockIn: r.c[9]?.f || r.c[9]?.v,       // J
+  noticePeriod: r.c[10]?.v,             // K
+
+  realEstate: r.c[11]?.v,        // L
+  seatingCapacity: r.c[12]?.v,  // M
+  employees: r.c[13]?.v,         // N
+
+  seatUtilization: r.c[14]?.v,          // O (NEW)
+
+  monthlyBaseRent: r.c[15]?.f || r.c[15]?.v, // P (was O)
+  monthlyOpex: r.c[16]?.f || r.c[16]?.v,     // Q (was P)
+  capex: r.c[17]?.f || r.c[17]?.v,           // R (was Q)
+
+  costPerSeat: r.c[18]?.f || r.c[18]?.v,     // S (was R)
+  costPerSqft: r.c[19]?.f || r.c[19]?.v,     // T (was S)
+
+  annualSpend: r.c[20]?.f || r.c[20]?.v,     // U (was T)
+  assetValue: r.c[21]?.f || r.c[21]?.v,      // V (was U)
+
+  opexPerSqft: r.c[22]?.f || r.c[22]?.v,     // W (was V)
+  opexPerSeat: r.c[23]?.f || r.c[23]?.v,     // X (was W)
+  capexPerSqft: r.c[24]?.f || r.c[24]?.v,    // Y (was X)
+  capexPerSeat: r.c[25]?.f || r.c[25]?.v,    // Z (was Y)
+
+  securityDeposit: r.c[26]?.f || r.c[26]?.v, // AA (was Z)
+  remarks: r.c[27]?.v                        // AB (was AA)
+});
+
+
+      });
+    
+
+    updateHeaderMetrics();
+    computeLeaseAlerts(); // ✅ MUST stay here
+  });
+
+
+/* ================= HEADER METRICS ================= */
+function cleanNumber(val) {
+  if (!val) return 0;
+
+  const num = parseFloat(
+    String(val).replace(/[^0-9.-]/g, "")
+  );
+
+  return isNaN(num) ? 0 : num;
+}
+
+function updateHeaderMetrics() {
+  const sites = Object.keys(cityData).length;
+
+  let totalRE = 0;
+  let totalPeople = 0;
+  let totalSpend = 0;
+  let totalAssetValue = 0;
+  let uniqueCountries = new Set();
+
+  Object.values(cityData).flat().forEach(d => {
+  totalRE += cleanNumber(d.realEstate);
+  totalSpend += cleanNumber(d.annualSpend);
+  totalAssetValue += cleanNumber(d.assetValue);
+  if (d.country) uniqueCountries.add(d.country);
+});
+
+// Set employees from max value found across all rows
+if (window._maxEmployees) totalPeople = window._maxEmployees;
+
+  // Countries
+  document.getElementById("totalCountries").innerText = uniqueCountries.size;
+
+  
+  // Sites
+  document.getElementById("totalSites").innerText = sites;
+
+  // Real Estate in Millions (Square Feet)
+  document.getElementById("totalRealEstate").innerText =
+    totalRE ? (totalRE / 1_000_000).toFixed(2) + "M" : "--";
+
+  // Employees
+  document.getElementById("totalPeople").innerText =
+    totalPeople ? totalPeople.toLocaleString() : "--";
+
+  // OpEx (Annual Spend) in Millions
+  document.getElementById("totalOpex").innerText =
+    totalSpend ? "$" + (totalSpend / 1_000_000).toFixed(2) + "M" : "--";
+
+  // Asset Value (using Security Deposit as proxy) in Millions
+  document.getElementById("assetValue").innerText =
+  totalAssetValue
+    ? "$" + (totalAssetValue / 1_000_000).toFixed(2) + "M"
+    : "--";
+
+
+  // Compliance - will be calculated from compliance sheet
+  calculateOverallCompliance();
+}
+
+function calculateOverallCompliance() {
+  const SUMMARY_GID = "1508572611";
+  fetch(`/api/sheets?range=SUMMARY`)
+    .then(r => r.text())
+    .then(t => {
+      const json = JSON.parse(
+  t.substring(
+    t.indexOf("(") + 1,
+    t.lastIndexOf(")")
+  )
+);
+      const rows = json.table.rows;
+
+      let total = 0;
+      let count = 0;
+
+      rows.forEach(r => {
+        // Skip header row (City / Compliance %)
+        if (!r.c || !r.c[1]?.v || isNaN(r.c[1].v)) return;
+        total += Number(r.c[1].v);
+        count++;
+      });
+
+      if (count > 0) {
+        const avg = Math.round(total / count);
+        document.getElementById("compliance").innerText = avg + "%";
+      } else {
+        document.getElementById("compliance").innerText = "--";
+      }
+    })
+    .catch(() => {
+      document.getElementById("compliance").innerText = "--";
+    });
+}
+/* ================= NAVIGATION ================= */
+let countryMarkers = [];
+let cityMarkers = [];
+
+function clearMarkers(list) {
+  list.forEach(m => map.removeLayer(m));
+  list.length = 0;
+}
+
+backBtn.onclick = () => {
+  if (currentView === "city") {
+    closeDetail();
+    currentView = "country";
+    showCountry(currentCountry);
+  } 
+  else if (currentView === "country") {
+    showWorld();
+  }
+};
+
+/* ================= WORLD VIEW ================= */
+function showWorld() {
+  currentView = "world";
+  currentCountry = null;
+
+  closeDetail();
+  clearMarkers(countryMarkers);
+  clearMarkers(cityMarkers);
+
+  document.getElementById("topSection").style.display = "block";
+  backBtn.style.display = "none";
+
+  map.setView([20, 0], 2);
+
+  Object.entries(countries).forEach(([name, c]) => {
+    const m = L.circleMarker([c.lat, c.lng], {
+      radius: 7,
+      color: "#ffffff",
+      fillColor: "#0DBCB4",
+      fillOpacity: 1,
+      weight: 2,
+      opacity: 1
+    })
+      .addTo(map)
+      .bindTooltip(name, {
+        permanent: true,
+        className: "label clickable-label",
+        direction: c.direction || "top",
+        offset: c.offset || [0, -15],
+        interactive: true
+      })
+      .on("click", () => showCountry(name));
+
+    let tooltipEl = null;
+
+    // Get tooltip element and set up label interactions
+    m.on("tooltipopen", e => {
+      tooltipEl = e.tooltip.getElement();
+      if (tooltipEl) {
+        tooltipEl.style.cursor = "pointer";
+        tooltipEl.onclick = () => showCountry(name);
+        
+        // When hovering on label, highlight the dot
+        tooltipEl.onmouseenter = () => {
+          m.setStyle({
+            radius: 8,
+            fillColor: "#0DBCB4",
+            color: "#0DBCB4",
+            weight: 3,
+            fillOpacity: 0.8
+          });
+        };
+        
+        tooltipEl.onmouseleave = () => {
+          m.setStyle({
+            radius: 8,
+            fillColor: "#0DBCB4",
+            color: "#ffffff",
+            weight: 2,
+            fillOpacity: 1
+          });
+        };
+      }
+    });
+
+    // ✅ REMOVED - No hover effect on the dot itself
+
+    countryMarkers.push(m);
+  });
+
+  setTimeout(() => map.invalidateSize(), 0);
+}
+/* ================= COUNTRY VIEW ================= */
+/* ================= COUNTRY VIEW ================= */
+function showCountry(country) {
+  currentView = "country";
+  currentCountry = country;
+
+  closeDetail();
+  clearMarkers(countryMarkers);
+  clearMarkers(cityMarkers);
+
+  document.getElementById("topSection").style.display = "none";
+  backBtn.style.display = "block";
+
+  map.setView(
+    [countries[country].lat, countries[country].lng],
+    countries[country].zoom
+  );
+
+  setTimeout(() => {
+    (cities[country] || []).forEach(city => {
+      // Use positioning data from array, or fallback to defaults
+      let direction = city[3] || "right";
+      let offset = city[4] || [10, 0];
+
+      const m = L.circleMarker([city[1], city[2]], {
+        radius: 7,
+        color: "#ffffff",
+        fillColor: "#0DBCB4",
+        fillOpacity: 1,
+        weight: 2,
+        opacity: 1
+      })
+        .addTo(map)
+        .bindTooltip(city[0], {
+          permanent: true,
+          className: "label clickable-label city-label",
+          direction,
+          offset,
+          interactive: true
+        })
+        .on("click", () => openCity(city[0], country));
+
+      let tooltipEl = null;
+
+      // Get tooltip element and set up label interactions
+      m.on("tooltipopen", e => {
+        tooltipEl = e.tooltip.getElement();
+        if (tooltipEl) {
+          tooltipEl.style.cursor = "pointer";
+          tooltipEl.onclick = () => openCity(city[0], country);
+          
+          // When hovering on label, highlight the dot
+          tooltipEl.onmouseenter = () => {
+            m.setStyle({
+              radius: 8,
+              fillColor: "#0DBCB4",
+              color: "#0DBCB4",
+              weight: 3,
+              fillOpacity: 0.8
+            });
+          };
+          
+          tooltipEl.onmouseleave = () => {
+            m.setStyle({
+              radius: 8,
+              fillColor: "#0DBCB4",
+              color: "#ffffff",
+              weight: 2,
+              fillOpacity: 1
+            });
+          };
+        }
+      });
+
+      cityMarkers.push(m);
+    });
+
+    map.invalidateSize();
+  }, 100);
+}
+const bangaloreOfficeNames = [
+  "Prestige Blue Chip Software Park",
+  "Roach Building"
+];
+
+
+function openCity(city, country) {
+  currentView = "city";
+  currentCountry = country;
+
+  document.getElementById("map").style.display = "none";
+  detailView.style.display = "block";
+  backBtn.style.display = "block";
+
+  detailTitle.innerHTML = `
+  <span>${city}</span>
+  <button onclick="window.open('https://app.powerbi.com/groups/me/reports/5c10fd78-7907-4120-9bf1-01d58746b1d7/ef025e2522b63ddd9249?ctid=d7758e8f-1df3-489f-86b5-a2254f55f9cc&experience=power-bi', '_blank')" 
+  style="
+  background: transparent;
+  color: var(--teal);
+  -webkit-text-fill-color: var(--teal);
+  border: 2px solid var(--teal);
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 12px rgba(0,250,194,0.2);
+"
+onmouseover="this.style.background='var(--teal)'; this.style.cssText+=';-webkit-text-fill-color:#000000;color:#000000;transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,250,194,0.5);'"
+onmouseout="this.style.background='transparent'; this.style.cssText+=';-webkit-text-fill-color:var(--teal);color:var(--teal);transform:translateY(0);box-shadow:0 0 12px rgba(0,250,194,0.2);'"
+  >📊 Space Utilization Dashboard</button>
+`;
+
+  const offices = cityData[city] || [];
+
+  let allOfficesHTML = "";
+
+  offices.forEach((d, index) => {
+
+  allOfficesHTML += `
+    <div class="office-block"
+      style="
+        margin-top: ${index === 0 ? '0' : '60px'};
+        padding-top: ${index === 0 ? '0' : '40px'};
+        border-top: ${index === 0 ? 'none' : '4px solid var(--teal)'};
+      ">
+
+      ${d.officeName && d.officeName.trim() !== "" ? `
+        <div class="office-title" style="font-size: 26px; margin-bottom: 30px;">
+          🏢 ${d.officeName}
+        </div>
+      ` : ``}
+
+
+       <!-- Site Overview -->
+<h3 style="margin-top: 0;">Site Overview</h3>
+<div class="grid">
+
+  <div class="card">🌍 Country<b>${NA(d.country)}</b></div>
+  <div class="card">🏙 State<b>${NA(d.state)}</b></div>
+  <div class="card">🏢 Office Type<b>${NA(d.officeType)}</b></div>
+
+  <div class="card">🧭 BU Type<b style="font-size: clamp(12px, 1.2vw, 18px); word-break: break-word; line-height: 1.3;">${NA(d.buType)}</b></div>
+  <div class="card">👥 Employees<b>${NA(d.employees)}</b></div>
+  <div class="card">💺 Seating Capacity<b>${NA(d.seatingCapacity)}</b></div>
+  <div class="card">📐 Area (Sqft)<b>${NA(d.realEstate)}</b></div>
+    <div class="card">🏬 Monthly Seat Utilization %<b>${NA(d.seatUtilization)}%</b></div>
+
+  <div class="card" style="grid-column: span 4;">
+    📫 Address
+    <b style="font-size:16px; line-height:1.4;">
+      ${NA(d.address)}
+    </b>
+  </div>
+
+</div>
+
+<!-- Lease Details -->
+<h3>Lease & Occupancy Details</h3>
+<div class="grid">
+
+  <div class="card">📅 Lease Start<b>${NA(d.leaseStart)}</b></div>
+  <div class="card">📅 Lease End<b>${NA(d.leaseEnd)}</b></div>
+  <div class="card">🔒 Lock-In Period<b>${NA(d.lockIn)}</b></div>
+  <div class="card">⏱ Notice Period<b>${NA(d.noticePeriod)} days</b></div>
+
+</div>
+
+<h3>Financial Summary</h3>
+<div class="grid">
+
+  <div class="card">💵 Monthly Base Rent<b>${formatUSD(d.monthlyBaseRent)}</b></div>
+  <div class="card">🧾 Monthly OPEX<b>${formatUSD(d.monthlyOpex)}</b></div>
+  <div class="card">🏗 Monthly CapEx<b>${formatUSD(d.capex)}</b></div>
+  <div class="card">📊 Annual Spend<b>${formatUSD(d.annualSpend)}</b></div>
+
+  <div class="card">💎 Asset Value<b>${formatUSD(d.assetValue)}</b></div>
+  <div class="card">🔐 Security Deposit<b>${formatUSD(d.securityDeposit)}</b></div>
+
+  <div class="card">💺 Cost / Seat<b>${formatUSD(d.costPerSeat)}</b></div>
+  <div class="card">📐 Cost / Sqft<b>${formatUSD(d.costPerSqft)}</b></div>
+
+  <div class="card">📐 Opex / Sqft<b>${formatUSD(d.opexPerSqft)}</b></div>
+  <div class="card">💺 Opex / Seat<b>${formatUSD(d.opexPerSeat)}</b></div>
+
+  <div class="card">🏗 Capex / Sqft<b>${formatUSD(d.capexPerSqft)}</b></div>
+  <div class="card">🪑 Capex / Seat<b>${formatUSD(d.capexPerSeat)}</b></div>
+
+  ${d.remarks ? `
+  <div class="card" style="grid-column: span 4;">
+    📝 Remarks
+    <b>${d.remarks}</b>
+  </div>
+  ` : ''}
+
+</div>
+
+
+      </div>
+    `;
+  });
+
+  // Clear the section headers and put all offices in the first grid
+  document.getElementById("coreGrid").innerHTML = allOfficesHTML;
+  document.getElementById("efficiencyGrid").innerHTML = "";
+  document.getElementById("financialGrid").innerHTML = "";
+
+  // Load compliance
+  loadComplianceForCity(city);
+}
+
+function closeDetail() {
+  detailView.style.display = "none";
+  document.getElementById("map").style.display = "block";
+
+  // Fix map size when returning from detail view
+  setTimeout(() => map.invalidateSize(), 0);
+}
+
+/* INIT */
+showWorld();
+
+/* ================= COMPLIANCE DATA LOADING (ADDITIVE) ================= */
+const COMPLIANCE_SHEET_ID = "14Bz3QibO5MWiOjaF-pvSfDs3enW5Nd6R";
+const COMPLIANCE_GID = "1802692301";
+
+const complianceSites = [
+  { name: "Vadodara", col: 4 },
+  { name: "Bangalore PBC", col: 7 },
+  { name: "Chennai", col: 10 },
+  { name: "Hyderabad", col: 13 },
+  { name: "Pune", col: 16 },
+  { name: "Bangalore RBD", col: 19 }
+];
+
+const complianceRawData = [];
+let complianceDataLoaded = false;
+// ✅ ADD HERE
+const summaryComplianceData = {};
+
+// COMPLIANCE sheet → detailed items
+fetch(`/api/sheets?range=COMPLIANCE`)
+  .then(r => r.text())
+  .then(t => {
+    const json = JSON.parse(
+      t.substring(t.indexOf("(") + 1, t.lastIndexOf(")"))
+    );
+    const rows = json.table.rows;
+    let currentCategory = "";
+
+    rows.forEach((r, rowIndex) => {
+  const c = r.c;
+  if (!c || !c[1]?.v) return;
+  if (c[0]?.v) {
+    const val = c[0].v.trim();
+    if (val.toLowerCase() === "category") return; // skip header
+    currentCategory = val;
+  }
+
+      complianceSites.forEach(site => {
+        const status = c[site.col]?.v;
+        if (!status || status === "NA") return;
+
+        complianceRawData.push({
+          city: site.name,
+          category: currentCategory,
+          area: c[1]?.v,
+          doc: c[2]?.v,
+          owner: c[3]?.v,
+          status: status.trim().toLowerCase()
+        });
+      });
+    });
+
+    complianceDataLoaded = true;
+  });
+
+
+fetch(`/api/sheets?range=SUMMARY`)
+  .then(r => r.text())
+  .then(t => {
+    const json = JSON.parse(
+      t.substring(t.indexOf("(") + 1, t.lastIndexOf(")"))
+    );
+    json.table.rows.forEach(r => {
+      if (!r.c || !r.c[0]?.v || !r.c[1]?.v || isNaN(r.c[1].v)) return;
+      const city = r.c[0].v.trim();
+      const pct = Math.round(Number(r.c[1].v));
+      summaryComplianceData[city] = pct;
+    });
+  });
+
+function loadComplianceForCity(baseCity) {
+  const container = document.getElementById("complianceSitesContainer");
+  container.innerHTML = "";
+
+  if (!complianceDataLoaded) {
+    container.innerHTML = '<p style="color: #718096;">Loading compliance data...</p>';
+    setTimeout(() => loadComplianceForCity(baseCity), 500);
+    return;
+  }
+
+  // Find all sites matching this base city
+  const matchingSites = complianceSites.filter(site => {
+  if (baseCity === "Bangalore") {
+    return site.name.startsWith("Bangalore");
+  }
+  return site.name === baseCity;
+});
+
+
+  if (matchingSites.length === 0) {
+    container.innerHTML = '<p style="color: #718096;">No compliance data available for this location.</p>';
+    return;
+  }
+
+  matchingSites.forEach(site => {
+    const siteData = complianceRawData.filter(r => r.city === site.name);
+    
+    if (siteData.length === 0) {
+      return;
+    }
+
+    const grouped = {};
+siteData.forEach(r => {
+  if (!grouped[r.category]) {
+    grouped[r.category] = { score: 0, total: 0 };
+  }
+  grouped[r.category].total++;
+  if (r.status === "yes") grouped[r.category].score += 1;
+  else if (r.status.includes("progress")) grouped[r.category].score += 0.5;
+});
+    const overallScore = summaryComplianceData[site.name] ?? 0;
+
+    const siteCard = document.createElement("div");
+    siteCard.className = "compliance-site-card";
+    siteCard.innerHTML = `
+      <h4>
+        ${site.name}
+        <span class="compliance-score">${overallScore}%</span>
+      </h4>
+      <div class="compliance-chart-container">
+        <canvas></canvas>
+      </div>
+    `;
+    container.appendChild(siteCard);
+
+    const cats = Object.keys(grouped);
+    const values = cats.map(c =>
+  Math.round((grouped[c].score / grouped[c].total) * 100)
+);
+
+    const colors = values.map(v =>
+      v >= 90 ? "#48bb78" : v >= 75 ? "#ed8936" : "#f56565"
+    );
+
+    new Chart(siteCard.querySelector("canvas"), {
+      type: "bar",
+      data: {
+        labels: cats,
+        datasets: [{ data: values, backgroundColor: colors, borderRadius: 6 }]
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: true,
+        onClick: (_, el) => {
+          if (el.length) openComplianceDrawer(site.name, cats[el[0].index]);
+        },
+        scales: {
+          x: {
+            max: 100,
+            border: { display: true, color: getChartBorderColor() },
+            ticks: {
+              callback: v => v + '%',
+              font: { size: 13, weight: 'bold', family: 'Inter' },
+              color: getChartTickColor()
+            },
+            grid: { color: getChartGridColor(), lineWidth: 1 }
+          },
+          y: {
+            border: { display: true, color: getChartBorderColor() },
+            ticks: {
+              font: { size: 12, weight: '700', family: 'Inter' },
+              color: getChartTickColor(),
+              padding: 8,
+              crossAlign: 'far',
+              mirror: false
+            },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            backgroundColor: getChartTooltipBg(),
+            titleColor: getChartTooltipTitleColor(),
+            bodyColor: getChartTooltipBodyColor(),
+            borderColor: getChartTooltipBorderColor(),
+            borderWidth: 2,
+            padding: 14,
+            titleFont: { size: 15, weight: 'bold' },
+            bodyFont: { size: 14 },
+            callbacks: { label: ctx => `Compliance: ${ctx.parsed.x}%` }
+          }
+        }
+      }
+    });
+  });
+}
+
+function openComplianceDrawer(siteName, category) {
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("overlay").classList.add("active");
+  document.getElementById("drawerTitle").innerText = `${siteName} – ${category}`;
+
+  const done = document.getElementById("done");
+  const prog = document.getElementById("progress");
+  const notdone = document.getElementById("notdone");
+
+  done.innerHTML = prog.innerHTML = notdone.innerHTML = "";
+
+  const items = complianceRawData.filter(r => r.city === siteName && r.category === category);
+
+  if (items.length === 0) {
+    done.innerHTML = '<p style="color: #a0aec0;">No data available</p>';
+    return;
+  }
+
+  items.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "item";
+    
+    const categoryClass = r.category.toLowerCase().replace(/\s+/g, '-');
+    const badgeClass = categoryClass.includes('facility') ? 'badge-facility' :
+                       categoryClass.includes('fire') ? 'badge-fire' :
+                       categoryClass.includes('statutory') ? 'badge-statutory' :
+                       categoryClass.includes('vendor') ? 'badge-vendor' :
+                       categoryClass.includes('environment') ? 'badge-environment' :
+                       'badge-security';
+    
+    div.innerHTML = `
+      <strong>${r.area}</strong>
+      <small>${r.owner}</small>
+      <span class="category-badge ${badgeClass}">${r.category}</span>
+    `;
+
+    if (r.status === "yes") done.appendChild(div);
+    else if (r.status.includes('progress')) prog.appendChild(div);
+    else notdone.appendChild(div);
+  });
+
+  if (!done.children.length) done.innerHTML = '<p style="color: #a0aec0;">No completed items</p>';
+  if (!prog.children.length) prog.innerHTML = '<p style="color: #a0aec0;">No items in progress</p>';
+  if (!notdone.children.length) notdone.innerHTML = '<p style="color: #a0aec0;">No pending items</p>';
+}
+
+function closeDrawer() {
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("overlay").classList.remove("active");
+}
+
+/* ================= NAVIGATION BAR HANDLERS ================= */
+function handleHomeClick() {
+  showWorld();
+}
+
+/* ================= THEME TOGGLE ================= */
+function getChartTickColor() {
+  return document.body.classList.contains("light-mode") ? "#374151" : "#ffffff";
+}
+
+function getChartGridColor() {
+  return document.body.classList.contains("light-mode")
+    ? "rgba(0, 0, 0, 0.08)"
+    : "rgba(255, 255, 255, 0.15)";
+}
+
+function getChartBorderColor() {
+  return document.body.classList.contains("light-mode")
+    ? "rgba(0, 0, 0, 0.15)"
+    : "rgba(255, 255, 255, 0.3)";
+}
+
+function getChartTooltipBg() {
+  return document.body.classList.contains("light-mode")
+    ? "rgba(255, 255, 255, 0.98)"
+    : "rgba(0, 0, 0, 0.95)";
+}
+
+function getChartTooltipTitleColor() {
+  return document.body.classList.contains("light-mode") ? "#008F66" : "#00FAC2";
+}
+
+function getChartTooltipBodyColor() {
+  return document.body.classList.contains("light-mode") ? "#111827" : "#ffffff";
+}
+
+function getChartTooltipBorderColor() {
+  return document.body.classList.contains("light-mode") ? "#008F66" : "#00FAC2";
+}
+
+function updateAllChartColors() {
+  const tickColor = getChartTickColor();
+  const gridColor = getChartGridColor();
+  const borderColor = getChartBorderColor();
+  const tooltipBg = getChartTooltipBg();
+  const tooltipTitle = getChartTooltipTitleColor();
+  const tooltipBody = getChartTooltipBodyColor();
+  const tooltipBorder = getChartTooltipBorderColor();
+
+  Chart.instances && Object.values(Chart.instances).forEach(chart => {
+    if (chart.options.scales) {
+      if (chart.options.scales.x) {
+        chart.options.scales.x.ticks.color = tickColor;
+        chart.options.scales.x.grid.color = gridColor;
+        chart.options.scales.x.border.color = borderColor;
+      }
+      if (chart.options.scales.y) {
+        chart.options.scales.y.ticks.color = tickColor;
+        chart.options.scales.y.border.color = borderColor;
+      }
+    }
+    if (chart.options.plugins?.tooltip) {
+      chart.options.plugins.tooltip.backgroundColor = tooltipBg;
+      chart.options.plugins.tooltip.titleColor = tooltipTitle;
+      chart.options.plugins.tooltip.bodyColor = tooltipBody;
+      chart.options.plugins.tooltip.borderColor = tooltipBorder;
+    }
+    chart.update("none");
+  });
+}
+
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.getElementById("themeToggleBtn");
+  const label = document.getElementById("themeLabel");
+
+  const isLight = body.classList.toggle("light-mode");
+
+  btn.classList.toggle("is-light", isLight);
+  label.textContent = isLight ? "☀️ Light" : "🌙 Dark";
+
+  updateAllChartColors();
+}
+
+/* ================= LEASE ALERT PANEL ================= */
+
+// Inject the panel HTML into the body
+document.body.insertAdjacentHTML('beforeend', `
+  <div class="lease-alert-panel" id="leaseAlertPanel">
+    <div class="lease-alert-header">
+      <h2>🔔 Lease Alerts</h2>
+      <button class="lease-alert-close" onclick="closeLeaseAlertPanel()">✕ Close</button>
+    </div>
+    <div class="lease-alert-body" id="leaseAlertBody"></div>
+  </div>
+`);
+
+function openLeaseAlertPanel() {
+  document.getElementById("leaseAlertPanel").classList.add("open");
+}
+
+function closeLeaseAlertPanel() {
+  document.getElementById("leaseAlertPanel").classList.remove("open");
+}
+
+function computeLeaseAlerts() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const critical = []; // action deadline already passed OR within 30 days
+  const warning  = []; // action deadline within 31–90 days
+
+  Object.entries(cityData).forEach(([city, offices]) => {
+    offices.forEach(d => {
+      if (!d.leaseEnd || !d.noticePeriod) return;
+
+      // Parse lease end date
+      const leaseEnd = new Date(d.leaseEnd);
+      if (isNaN(leaseEnd)) return;
+
+      const noticeDays = parseInt(String(d.noticePeriod).replace(/[^0-9]/g, ""));
+      if (!noticeDays || isNaN(noticeDays)) return;
+
+      // Action deadline = leaseEnd minus noticePeriod days
+      const actionDeadline = new Date(leaseEnd);
+      actionDeadline.setDate(actionDeadline.getDate() - noticeDays);
+
+      const daysUntilAction = Math.ceil((actionDeadline - today) / (1000 * 60 * 60 * 24));
+
+      const entry = {
+        city,
+        officeName: d.officeName || "",
+        leaseEnd: leaseEnd.toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }),
+        noticeDays,
+        actionDeadline: actionDeadline.toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }),
+        daysUntilAction
+      };
+
+      // Skip anything more than 30 days away from action deadline
+      if (daysUntilAction > 30) return;
+
+      if (daysUntilAction <= 0)       critical.push(entry);
+      else if (daysUntilAction <= 30) warning.push(entry);
+    });
+  });
+
+  // Sort each tier: most urgent first
+  critical.sort((a, b) => a.daysUntilAction - b.daysUntilAction);
+  warning.sort((a, b) => a.daysUntilAction - b.daysUntilAction);
+
+  const totalAlerts = critical.length + warning.length;
+
+  // Update bell button
+  const btn = document.getElementById("leaseAlertBtn");
+  const badge = document.getElementById("alertBadge");
+  if (totalAlerts > 0) {
+    btn.style.display = "flex";
+    badge.textContent = totalAlerts;
+  } else {
+    btn.style.display = "none";
+  }
+
+  // Build panel content
+  const body = document.getElementById("leaseAlertBody");
+  body.innerHTML = "";
+
+  if (totalAlerts === 0) {
+    body.innerHTML = `<div class="no-alerts">✅ No lease alerts at this time</div>`;
+    return;
+  }
+
+  function renderCard(entry, tier) {
+    let chipLabel, chipClass;
+    if (entry.daysUntilAction <= 0) {
+      chipLabel = `⚠️ Overdue by ${Math.abs(entry.daysUntilAction)} days`;
+      chipClass = "overdue";
+    } else if (tier === "critical") {
+      chipLabel = `🔴 Act within ${entry.daysUntilAction} days`;
+      chipClass = "critical";
+    } else {
+      chipLabel = `🟡 ${entry.daysUntilAction} days to act`;
+      chipClass = "warning";
+    }
+
+    return `
+      <div class="alert-card ${tier}">
+        <div class="alert-card-city">${entry.city}</div>
+        ${entry.officeName ? `<div class="alert-card-office">${entry.officeName}</div>` : ""}
+        <div class="alert-card-rows">
+          <div class="alert-card-row">📅 Lease End Date<span>${entry.leaseEnd}</span></div>
+          <div class="alert-card-row">⏱ Notice Period<span>${entry.noticeDays} days</span></div>
+          <div class="alert-card-row" style="grid-column:span 2;">
+            🎯 Must Act By<span style="color:${tier === 'critical' ? '#ff6b6b' : '#fbbf24'};">${entry.actionDeadline}</span>
+          </div>
+        </div>
+        <div class="alert-days-chip ${chipClass}">${chipLabel}</div>
+      </div>
+    `;
+  }
+
+  if (critical.length > 0) {
+    body.innerHTML += `<div class="alert-tier-label critical">🔴 Critical — Immediate Action Required (${critical.length})</div>`;
+    critical.forEach(e => body.innerHTML += renderCard(e, "critical"));
+  }
+
+  if (warning.length > 0) {
+    body.innerHTML += `<div class="alert-tier-label warning">🟡 Warning — Action Needed Soon (${warning.length})</div>`;
+    warning.forEach(e => body.innerHTML += renderCard(e, "warning"));
+  }
+}
+
+</script>
+
+</body>
+</html>
+
+
