@@ -9,6 +9,8 @@
   },
   "routes": [
     { "src": "/api/sheets", "dest": "/api/sheets.js" },
+    { "src": "/ascendion-logo.png", "dest": "/ascendion-logo.png" },
+    { "src": "/ss.png", "dest": "/ss.png" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
