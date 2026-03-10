@@ -3,9 +3,8 @@ import { google } from "googleapis";
 const SHEET_MAP = {
   UPDATED:    "1bRESXFZIv4J3ySaS1N2Ez6P6c1_3HZFgC2daXi1-BgU",
   SUMMARY:    "1bRESXFZIv4J3ySaS1N2Ez6P6c1_3HZFgC2daXi1-BgU",
-  COMPLIANCE: "14Bz3QibO5MWiOjaF-pvSfDs3enW5Nd6R"
+  COMPLIANCE: "1bRESXFZIv4J3ySaS1N2Ez6P6c1_3HZFgC2daXi1-BgU"  // ← fix this
 };
-
 export default async function handler(req, res) {
   try {
     const raw = process.env.GOOGLE_CREDENTIALS_JSON;
