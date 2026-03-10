@@ -8,10 +8,14 @@ const SHEET_MAP = {
 
 export default async function handler(req, res) {
   try {
-    const raw = process.env.GOOGLE_CREDENTIALS_JSON
-      .replace(/\\n/g, '\n')
-      .replace(/\r/g, '');
-    const credentials = JSON.parse(raw);
+    const raw = process.env.GOOGLE_CREDENTIALS_JSON;
+    
+    // Fix any real newlines inside the JSON string before parsing
+    const fixed = raw.replace(/\n/g, '\\n').replace(/\r/g, '');
+    const credentials = JSON.parse(fixed);
+    
+    // Restore actual newlines in private key
+    credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
 
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -47,7 +51,6 @@ export default async function handler(req, res) {
     };
 
     const gviz = `google.visualization.Query.setResponse(${JSON.stringify({ table })});`;
-
     res.setHeader("Content-Type", "text/plain");
     res.status(200).send(gviz);
 
