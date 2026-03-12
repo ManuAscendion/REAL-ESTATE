@@ -2000,7 +2000,7 @@ function cleanNumber(val) {
 }
 
 function updateHeaderMetrics() {
-  const sites = Object.keys(cityData).length;
+  const sites = Object.values(cityData).flat().length;
 
   let totalRE = 0;
   let totalPeople = 0;
