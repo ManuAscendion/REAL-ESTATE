@@ -840,6 +840,19 @@ h2, h3, .card, .office-title {
   transition: all 0.3s ease;
   font-size: 14px !important;
 }
+   .label-red {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+}
+
+.label-yellow {
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%) !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+}
 
 .clickable-label.force-hover {
   background: linear-gradient(135deg, #00FAC2 0%, #008F66 100%) !important;
@@ -2117,18 +2130,21 @@ function showWorld() {
   map.setView([20, 0], 2);
 
   Object.entries(countries).forEach(([name, c]) => {
-    const m = L.circleMarker([c.lat, c.lng], {
-      radius: 7,
-      color: "#ffffff",
-      fillColor: "#0DBCB4",
-      fillOpacity: 1,
-      weight: 2,
-      opacity: 1
-    })
+   const alertLevel = getCountryAlertLevel(name);
+const fillColor = alertLevel === "red" ? "#dc2626" : alertLevel === "yellow" ? "#f59e0b" : "#0DBCB4";
+
+const m = L.circleMarker([c.lat, c.lng], {
+  radius: 7,
+  color: "#ffffff",
+  fillColor: fillColor,
+  fillOpacity: 1,
+  weight: 2,
+  opacity: 1
+})
       .addTo(map)
       .bindTooltip(name, {
-        permanent: true,
-        className: "label clickable-label",
+  permanent: true,
+  className: alertLevel === "red" ? "label clickable-label label-red" : alertLevel === "yellow" ? "label clickable-label label-yellow" : "label clickable-label",
         direction: c.direction || "top",
         offset: c.offset || [0, -15],
         interactive: true
@@ -2145,11 +2161,11 @@ function showWorld() {
         tooltipEl.onclick = () => showCountry(name);
         
         // When hovering on label, highlight the dot
-        tooltipEl.onmouseenter = () => {
+       tooltipEl.onmouseenter = () => {
           m.setStyle({
             radius: 8,
-            fillColor: "#0DBCB4",
-            color: "#0DBCB4",
+            fillColor: fillColor,
+            color: fillColor,
             weight: 3,
             fillOpacity: 0.8
           });
@@ -2158,7 +2174,7 @@ function showWorld() {
         tooltipEl.onmouseleave = () => {
           m.setStyle({
             radius: 8,
-            fillColor: "#0DBCB4",
+            fillColor: fillColor,
             color: "#ffffff",
             weight: 2,
             fillOpacity: 1
@@ -2198,18 +2214,21 @@ function showCountry(country) {
       let direction = city[3] || "right";
       let offset = city[4] || [10, 0];
 
-      const m = L.circleMarker([city[1], city[2]], {
-        radius: 7,
-        color: "#ffffff",
-        fillColor: "#0DBCB4",
-        fillOpacity: 1,
-        weight: 2,
-        opacity: 1
-      })
+      const cityAlertLevel = getLocationAlertLevel(city[0]);
+const cityFillColor = cityAlertLevel === "red" ? "#dc2626" : cityAlertLevel === "yellow" ? "#f59e0b" : "#0DBCB4";
+
+const m = L.circleMarker([city[1], city[2]], {
+  radius: 7,
+  color: "#ffffff",
+  fillColor: cityFillColor,
+  fillOpacity: 1,
+  weight: 2,
+  opacity: 1
+})
         .addTo(map)
         .bindTooltip(city[0], {
-          permanent: true,
-          className: "label clickable-label city-label",
+  permanent: true,
+  className: cityAlertLevel === "red" ? "label clickable-label city-label label-red" : cityAlertLevel === "yellow" ? "label clickable-label city-label label-yellow" : "label clickable-label city-label",
           direction,
           offset,
           interactive: true
@@ -2229,8 +2248,8 @@ function showCountry(country) {
           tooltipEl.onmouseenter = () => {
             m.setStyle({
               radius: 8,
-              fillColor: "#0DBCB4",
-              color: "#0DBCB4",
+              fillColor: cityFillColor,
+              color: cityFillColor,
               weight: 3,
               fillOpacity: 0.8
             });
@@ -2239,7 +2258,7 @@ function showCountry(country) {
           tooltipEl.onmouseleave = () => {
             m.setStyle({
               radius: 8,
-              fillColor: "#0DBCB4",
+              fillColor: cityFillColor,
               color: "#ffffff",
               weight: 2,
               fillOpacity: 1
@@ -2746,6 +2765,41 @@ function openLeaseAlertPanel() {
 function closeLeaseAlertPanel() {
   document.getElementById("leaseAlertPanel").classList.remove("open");
 }
+
+function getLocationAlertLevel(cityName) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const offices = cityData[cityName] || [];
+  let level = "green";
+
+  offices.forEach(d => {
+    if (!d.leaseEnd || !d.noticePeriod) return;
+    const leaseEnd = new Date(d.leaseEnd);
+    if (isNaN(leaseEnd)) return;
+    const noticeDays = parseInt(String(d.noticePeriod).replace(/[^0-9]/g, ""));
+    if (!noticeDays || isNaN(noticeDays)) return;
+
+    const actionDeadline = new Date(leaseEnd);
+    actionDeadline.setDate(actionDeadline.getDate() - (noticeDays + 30));
+    const daysUntilAction = Math.ceil((actionDeadline - today) / (1000 * 60 * 60 * 24));
+
+    if (daysUntilAction <= 0) level = "red";
+    else if (daysUntilAction <= 30 && level !== "red") level = "yellow";
+  });
+
+  return level;
+}
+
+function getCountryAlertLevel(country) {
+  const citiesInCountry = cities[country] || [];
+  let level = "green";
+  citiesInCountry.forEach(city => {
+    const cityLevel = getLocationAlertLevel(city[0]);
+    if (cityLevel === "red") level = "red";
+    else if (cityLevel === "yellow" && level !== "red") level = "yellow";
+  });
+  return level;
+}  
 
 function computeLeaseAlerts() {
   const today = new Date();
