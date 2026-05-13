@@ -1821,6 +1821,19 @@ const SHEET_NAME = "UPDATED";
 let map = L.map("map").setView([20, 0], 2);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
+/* ================= XSS SANITIZER ================= */
+function sanitize(str) {
+  if (str === null || str === undefined) return "";
+  const div = document.createElement("div");
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+// Wrap NA() to also sanitize output
+function safeNA(v) {
+  return sanitize(NA(v));
+}
+
 // After flex layout settles, fix map size
 setTimeout(() => {
   map.invalidateSize();
@@ -2289,7 +2302,7 @@ function openCity(city, country) {
   backBtn.style.display = "block";
 
   detailTitle.innerHTML = `
-  <span>${city}</span>
+  <span>${sanitize(city)}</span>
   <button onclick="window.open('https://app.powerbi.com/groups/me/reports/5c10fd78-7907-4120-9bf1-01d58746b1d7/ef025e2522b63ddd9249?ctid=d7758e8f-1df3-489f-86b5-a2254f55f9cc&experience=power-bi', '_blank')" 
   style="
   background: transparent;
@@ -2318,39 +2331,36 @@ onmouseout="this.style.background='transparent'; this.style.cssText+=';-webkit-t
 
   offices.forEach((d, index) => {
 
-  allOfficesHTML += `
-    <div class="office-block"
-      style="
-        margin-top: ${index === 0 ? '0' : '60px'};
-        padding-top: ${index === 0 ? '0' : '40px'};
-        border-top: ${index === 0 ? 'none' : '4px solid var(--teal)'};
-      ">
+  // REPLACE the allOfficesHTML template string content — change every NA(d.xxx) to safeNA(d.xxx)
+// and every formatUSD(d.xxx) to sanitize(formatUSD(d.xxx))
+
+allOfficesHTML += `
+    <div class="office-block" style="margin-top: ${index === 0 ? '0' : '60px'}; padding-top: ${index === 0 ? '0' : '40px'}; border-top: ${index === 0 ? 'none' : '4px solid var(--teal)'};">
 
       ${d.officeName && d.officeName.trim() !== "" ? `
         <div class="office-title" style="font-size: 26px; margin-bottom: 30px;">
-          🏢 ${d.officeName}
+          🏢 ${sanitize(d.officeName)}
         </div>
       ` : ``}
-
 
        <!-- Site Overview -->
 <h3 style="margin-top: 0;">Site Overview</h3>
 <div class="grid">
 
-  <div class="card">🌍 Country<b>${NA(d.country)}</b></div>
-  <div class="card">🏙 State<b>${NA(d.state)}</b></div>
-  <div class="card">🏢 Office Type<b>${NA(d.officeType)}</b></div>
+  <div class="card">🌍 Country<b>${safeNA(d.country)}</b></div>
+  <div class="card">🏙 State<b>${safeNA(d.state)}</b></div>
+  <div class="card">🏢 Office Type<b>${safeNA(d.officeType)}</b></div>
 
-  <div class="card">🧭 BU Type<b style="font-size: clamp(12px, 1.2vw, 18px); word-break: break-word; line-height: 1.3;">${NA(d.buType)}</b></div>
-  <div class="card">👥 Employees<b>${NA(d.employees)}</b></div>
-  <div class="card">💺 Seating Capacity<b>${NA(d.seatingCapacity)}</b></div>
-  <div class="card">📐 Area (Sqft)<b>${NA(d.realEstate)}</b></div>
-    <div class="card">🏬 Monthly Seat Utilization %<b>${NA(d.seatUtilization)}%</b></div>
+  <div class="card">🧭 BU Type<b style="font-size: clamp(12px, 1.2vw, 18px); word-break: break-word; line-height: 1.3;">${safeNA(d.buType)}</b></div>
+  <div class="card">👥 Employees<b>${safeNA(d.employees)}</b></div>
+  <div class="card">💺 Seating Capacity<b>${safeNA(d.seatingCapacity)}</b></div>
+  <div class="card">📐 Area (Sqft)<b>${safeNA(d.realEstate)}</b></div>
+  <div class="card">🏬 Monthly Seat Utilization %<b>${safeNA(d.seatUtilization)}%</b></div>
 
   <div class="card" style="grid-column: span 4;">
     📫 Address
     <b style="font-size:16px; line-height:1.4;">
-      ${NA(d.address)}
+      ${safeNA(d.address)}
     </b>
   </div>
 
@@ -2360,45 +2370,43 @@ onmouseout="this.style.background='transparent'; this.style.cssText+=';-webkit-t
 <h3>Lease & Occupancy Details</h3>
 <div class="grid">
 
-  <div class="card">📅 Lease Start<b>${NA(d.leaseStart)}</b></div>
-  <div class="card">📅 Lease End<b>${NA(d.leaseEnd)}</b></div>
-  <div class="card">🔒 Lock-In Period<b>${NA(d.lockIn)}</b></div>
-  <div class="card">⏱ Notice Period<b>${NA(d.noticePeriod)} days</b></div>
+  <div class="card">📅 Lease Start<b>${safeNA(d.leaseStart)}</b></div>
+  <div class="card">📅 Lease End<b>${safeNA(d.leaseEnd)}</b></div>
+  <div class="card">🔒 Lock-In Period<b>${safeNA(d.lockIn)}</b></div>
+  <div class="card">⏱ Notice Period<b>${safeNA(d.noticePeriod)} days</b></div>
 
 </div>
 
 <h3>Financial Summary</h3>
 <div class="grid">
 
-  <div class="card">💵 Monthly Base Rent<b>${formatUSD(d.monthlyBaseRent)}</b></div>
-  <div class="card">🧾 Monthly OPEX<b>${formatUSD(d.monthlyOpex)}</b></div>
-  <div class="card">🏗 Monthly CapEx<b>${formatUSD(d.capex)}</b></div>
-  <div class="card">📊 Annual Spend<b>${formatUSD(d.annualSpend)}</b></div>
+  <div class="card">💵 Monthly Base Rent<b>${sanitize(formatUSD(d.monthlyBaseRent))}</b></div>
+  <div class="card">🧾 Monthly OPEX<b>${sanitize(formatUSD(d.monthlyOpex))}</b></div>
+  <div class="card">🏗 Monthly CapEx<b>${sanitize(formatUSD(d.capex))}</b></div>
+  <div class="card">📊 Annual Spend<b>${sanitize(formatUSD(d.annualSpend))}</b></div>
 
-  <div class="card">💎 Asset Value<b>${formatUSD(d.assetValue)}</b></div>
-  <div class="card">🔐 Security Deposit<b>${formatUSD(d.securityDeposit)}</b></div>
+  <div class="card">💎 Asset Value<b>${sanitize(formatUSD(d.assetValue))}</b></div>
+  <div class="card">🔐 Security Deposit<b>${sanitize(formatUSD(d.securityDeposit))}</b></div>
 
-  <div class="card">💺 Cost / Seat<b>${formatUSD(d.costPerSeat)}</b></div>
-  <div class="card">📐 Cost / Sqft<b>${formatUSD(d.costPerSqft)}</b></div>
+  <div class="card">💺 Cost / Seat<b>${sanitize(formatUSD(d.costPerSeat))}</b></div>
+  <div class="card">📐 Cost / Sqft<b>${sanitize(formatUSD(d.costPerSqft))}</b></div>
 
-  <div class="card">📐 Opex / Sqft<b>${formatUSD(d.opexPerSqft)}</b></div>
-  <div class="card">💺 Opex / Seat<b>${formatUSD(d.opexPerSeat)}</b></div>
+  <div class="card">📐 Opex / Sqft<b>${sanitize(formatUSD(d.opexPerSqft))}</b></div>
+  <div class="card">💺 Opex / Seat<b>${sanitize(formatUSD(d.opexPerSeat))}</b></div>
 
-  <div class="card">🏗 Capex / Sqft<b>${formatUSD(d.capexPerSqft)}</b></div>
-  <div class="card">🪑 Capex / Seat<b>${formatUSD(d.capexPerSeat)}</b></div>
+  <div class="card">🏗 Capex / Sqft<b>${sanitize(formatUSD(d.capexPerSqft))}</b></div>
+  <div class="card">🪑 Capex / Seat<b>${sanitize(formatUSD(d.capexPerSeat))}</b></div>
 
   ${d.remarks ? `
   <div class="card" style="grid-column: span 4;">
     📝 Remarks
-    <b>${d.remarks}</b>
+    <b>${sanitize(d.remarks)}</b>
   </div>
   ` : ''}
 
 </div>
-
-
-      </div>
-    `;
+    </div>
+  `;
   });
 
   // Clear the section headers and put all offices in the first grid
@@ -2536,10 +2544,10 @@ siteData.forEach(r => {
     const siteCard = document.createElement("div");
     siteCard.className = "compliance-site-card";
     siteCard.innerHTML = `
-      <h4>
-        ${site.name}
-        <span class="compliance-score">${overallScore}%</span>
-      </h4>
+       <h4>
+    ${sanitize(site.name)}
+    <span class="compliance-score">${sanitize(String(overallScore))}%</span>
+  </h4>
       <div class="compliance-chart-container">
         <canvas></canvas>
       </div>
@@ -2642,9 +2650,9 @@ function openComplianceDrawer(siteName, category) {
                        'badge-security';
     
     div.innerHTML = `
-      <strong>${r.area}</strong>
-      <small>${r.owner}</small>
-      <span class="category-badge ${badgeClass}">${r.category}</span>
+        <strong>${sanitize(r.area)}</strong>
+  <small>${sanitize(r.owner)}</small>
+  <span class="category-badge ${badgeClass}">${sanitize(r.category)}</span>
     `;
 
     if (r.status === "yes") done.appendChild(div);
@@ -2882,14 +2890,14 @@ function computeLeaseAlerts() {
     }
 
     return `
-      <div class="alert-card ${tier}">
-        <div class="alert-card-city">${entry.city}</div>
-        ${entry.officeName ? `<div class="alert-card-office">${entry.officeName}</div>` : ""}
-        <div class="alert-card-rows">
-          <div class="alert-card-row">📅 Lease End Date<span>${entry.leaseEnd}</span></div>
-          <div class="alert-card-row">⏱ Notice Period<span>${entry.noticeDays} days</span></div>
-          <div class="alert-card-row" style="grid-column:span 2;">
-            🎯 Act By<span style="color:${tier === 'critical' ? '#ff6b6b' : '#fbbf24'};">${entry.actionDeadline}</span>
+      <div class="alert-card ${sanitize(tier)}">
+      <div class="alert-card-city">${sanitize(entry.city)}</div>
+      ${entry.officeName ? `<div class="alert-card-office">${sanitize(entry.officeName)}</div>` : ""}
+      <div class="alert-card-rows">
+        <div class="alert-card-row">📅 Lease End Date<span>${sanitize(entry.leaseEnd)}</span></div>
+        <div class="alert-card-row">⏱ Notice Period<span>${sanitize(String(entry.noticeDays))} days</span></div>
+        <div class="alert-card-row" style="grid-column:span 2;">
+          🎯 Act By<span style="color:${tier === 'critical' ? '#ff6b6b' : '#fbbf24'};">${sanitize(entry.actionDeadline)}</span>
           </div>
         </div>
         
@@ -2912,5 +2920,3 @@ function computeLeaseAlerts() {
 
 </body>
 </html>
-
-
